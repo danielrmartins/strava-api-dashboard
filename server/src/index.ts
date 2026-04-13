@@ -2,6 +2,7 @@ import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { authRoutes } from './routes/auth.js';
+import { activityRoutes } from './routes/activities.js';
 
 const server = Fastify({
   logger: {
@@ -24,6 +25,7 @@ async function bootstrap(): Promise<void> {
 
   // Routes
   await server.register(authRoutes);
+  await server.register(activityRoutes);
 
   // Health check
   server.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
