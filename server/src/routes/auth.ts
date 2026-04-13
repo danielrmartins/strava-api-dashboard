@@ -67,14 +67,17 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       try {
+        const params = new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          code,
+          grant_type: 'authorization_code',
+        });
+
         const response = await axios.post<StravaTokenResponse>(
           'https://www.strava.com/oauth/token',
-          {
-            client_id: clientId,
-            client_secret: clientSecret,
-            code,
-            grant_type: 'authorization_code',
-          }
+          params.toString(),
+          { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
         );
 
         const { access_token, refresh_token, expires_at, token_type, athlete } = response.data;

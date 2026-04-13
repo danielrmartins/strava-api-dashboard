@@ -38,14 +38,17 @@ export async function refreshAccessToken(tokens: TokenData): Promise<TokenData> 
     throw new Error('STRAVA_CLIENT_ID or STRAVA_CLIENT_SECRET not set');
   }
 
+  const params = new URLSearchParams({
+    client_id: clientId,
+    client_secret: clientSecret,
+    grant_type: 'refresh_token',
+    refresh_token: tokens.refresh_token,
+  });
+
   const response = await axios.post<TokenData>(
     'https://www.strava.com/oauth/token',
-    {
-      client_id: clientId,
-      client_secret: clientSecret,
-      grant_type: 'refresh_token',
-      refresh_token: tokens.refresh_token,
-    }
+    params.toString(),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
   );
 
   const refreshed: TokenData = {
