@@ -3,6 +3,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { authRoutes } from './routes/auth.js';
 import { activityRoutes } from './routes/activities.js';
+import { athleteRoutes } from './routes/athlete.js';
 
 const server = Fastify({
   logger: {
@@ -26,6 +27,7 @@ async function bootstrap(): Promise<void> {
   // Routes
   await server.register(authRoutes);
   await server.register(activityRoutes);
+  await server.register(athleteRoutes);
 
   // Health check
   server.get('/health', async () => ({ status: 'ok', timestamp: new Date().toISOString() }));
