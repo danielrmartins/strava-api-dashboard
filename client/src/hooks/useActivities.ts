@@ -23,7 +23,15 @@ export function useActivities(): UseActivitiesResult {
 
       try {
         const res = await fetch('/activities');
+
+        if (res.status === 401) {
+          // Session expired — reload to show Login page
+          window.location.reload();
+          return;
+        }
+
         if (!res.ok) throw new Error(`Server error: ${res.status}`);
+
         const data: Activity[] = await res.json();
         if (!cancelled) setActivities(data);
       } catch (err) {

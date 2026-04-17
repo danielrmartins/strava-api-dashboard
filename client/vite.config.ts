@@ -7,7 +7,9 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/activities': 'http://localhost:3001',
-      '/auth': 'http://localhost:3001',
+      '/auth':       'http://localhost:3001',
+      '/athlete':    'http://localhost:3001',
+      '/health':     'http://localhost:3001',
     },
   },
 });

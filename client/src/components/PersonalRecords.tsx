@@ -8,14 +8,13 @@ interface PREntry {
   label: string;
   minKm: number;
   maxKm: number;
+  targetKm: number;
 }
 
 const DISTANCES: PREntry[] = [
-  { label: '1 km', minKm: 0.9, maxKm: 1.2 },
-  { label: '5 km', minKm: 4.8, maxKm: 5.3 },
-  { label: '10 km', minKm: 9.7, maxKm: 10.4 },
-  { label: 'Meia', minKm: 20.5, maxKm: 22.0 },
-  { label: 'Maratona', minKm: 41.0, maxKm: 43.5 },
+  { label: '10 km',    minKm: 9.7,  maxKm: 10.4, targetKm: 10.0   },
+  { label: 'Meia',     minKm: 20.5, maxKm: 22.0, targetKm: 21.097 },
+  { label: 'Maratona', minKm: 41.0, maxKm: 43.5, targetKm: 42.195 },
 ];
 
 function formatDuration(minutes: number): string {
@@ -27,7 +26,7 @@ function formatDuration(minutes: number): string {
 }
 
 export function PersonalRecords({ activities }: Props) {
-  const records = DISTANCES.map(({ label, minKm, maxKm }) => {
+  const records = DISTANCES.map(({ label, minKm, maxKm, targetKm }) => {
     const candidates = activities.filter(
       (a) => a.distanceKm >= minKm && a.distanceKm <= maxKm && a.paceMinKm > 0
     );
@@ -37,7 +36,7 @@ export function PersonalRecords({ activities }: Props) {
     return {
       label,
       pace: best.paceFormatted,
-      duration: formatDuration(best.durationMin),
+      duration: formatDuration(best.paceMinKm * targetKm),
       date: new Date(best.date).toLocaleDateString('pt-BR', {
         day: '2-digit', month: '2-digit', year: 'numeric',
       }),

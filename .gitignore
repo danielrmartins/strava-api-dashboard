@@ -1,6 +1,8 @@
 # Environment & secrets
 .env
 tokens.json
+.storage/
+server/.storage/
 
 # Dependencies
 node_modules/
@@ -24,3 +26,4 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+.vercel

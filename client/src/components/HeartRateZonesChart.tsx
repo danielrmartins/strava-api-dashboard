@@ -33,7 +33,7 @@ interface ZoneBar {
 export function HeartRateZonesChart({ activities, zones }: Props) {
   const withHR = activities.filter((a) => a.avgHeartRate !== null);
 
-  if (withHR.length === 0) {
+  if (!Array.isArray(zones) || zones.length === 0 || withHR.length === 0) {
     return (
       <div className="chart-card">
         <h2>Zonas de Frequência Cardíaca</h2>
@@ -69,6 +69,9 @@ export function HeartRateZonesChart({ activities, zones }: Props) {
           <XAxis dataKey="name" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 11 }} width={36} />
           <Tooltip
+            contentStyle={{ background: '#222', border: '1px solid #2a2a2a', borderRadius: 6 }}
+            labelStyle={{ color: '#f0f0f0', fontWeight: 600 }}
+            itemStyle={{ color: '#ccc' }}
             formatter={(value: number, name: string) =>
               name === 'minutos' ? [`${value} min`, 'Tempo total'] : [value, 'Corridas']
             }

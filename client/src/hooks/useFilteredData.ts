@@ -49,8 +49,9 @@ function computeSummary(activities: Activity[]): SummaryMetrics {
   const totalElevationGainM = activities.reduce((s, a) => s + a.elevationGainM, 0);
 
   function fmt(pace: number) {
-    const m = Math.floor(pace);
-    const s = Math.round((pace - m) * 60);
+    let m = Math.floor(pace);
+    let s = Math.round((pace - m) * 60);
+    if (s === 60) { m += 1; s = 0; }
     return `${m}:${s.toString().padStart(2, '0')} /km`;
   }
 

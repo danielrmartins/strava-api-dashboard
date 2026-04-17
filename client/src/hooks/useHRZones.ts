@@ -10,8 +10,11 @@ export function useHRZones() {
 
   useEffect(() => {
     fetch('/athlete/zones')
-      .then((r) => r.json())
-      .then((data: HRZone[]) => setZones(data))
+      .then((r) => {
+        if (!r.ok) return null;
+        return r.json() as Promise<HRZone[]>;
+      })
+      .then((data) => setZones(data))
       .catch(() => setZones(null));
   }, []);
 

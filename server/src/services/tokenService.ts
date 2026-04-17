@@ -1,8 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
 import axios from 'axios';
-
-const TOKENS_PATH = path.resolve(process.cwd(), 'tokens.json');
+import { storage } from './storageService.js';
 
 export interface TokenData {
   access_token: string;
@@ -10,27 +7,29 @@ export interface TokenData {
   expires_at: number;
   token_type: string;
   athlete_id: number;
+  athlete_name: string;
+  athlete_username: string;
 }
 
-export async function saveTokens(data: TokenData): Promise<void> {
-  await fs.writeFile(TOKENS_PATH, JSON.stringify(data, null, 2), 'utf-8');
+const tokenKey = (sid: string) => `session:${sid}:tokens`;
+
+export async function saveTokens(sid: string, data: TokenData): Promise<void> {
+  await storage.set(tokenKey(sid), data);
 }
 
-export async function loadTokens(): Promise<TokenData | null> {
-  try {
-    const raw = await fs.readFile(TOKENS_PATH, 'utf-8');
-    return JSON.parse(raw) as TokenData;
-  } catch {
-    return null;
-  }
+export async function loadTokens(sid: string): Promise<TokenData | null> {
+  return storage.get<TokenData>(tokenKey(sid));
+}
+
+export async function deleteTokens(sid: string): Promise<void> {
+  await storage.del(tokenKey(sid));
 }
 
 export function isTokenExpired(tokens: TokenData): boolean {
-  // expires_at is Unix timestamp in seconds; add 5-minute buffer
   return Date.now() / 1000 >= tokens.expires_at - 300;
 }
 
-export async function refreshAccessToken(tokens: TokenData): Promise<TokenData> {
+export async function refreshAccessToken(sid: string, tokens: TokenData): Promise<TokenData> {
   const clientId = process.env.STRAVA_CLIENT_ID;
   const clientSecret = process.env.STRAVA_CLIENT_SECRET;
 
@@ -57,21 +56,23 @@ export async function refreshAccessToken(tokens: TokenData): Promise<TokenData> 
     expires_at: response.data.expires_at,
     token_type: response.data.token_type,
     athlete_id: tokens.athlete_id,
+    athlete_name: tokens.athlete_name,
+    athlete_username: tokens.athlete_username,
   };
 
-  await saveTokens(refreshed);
+  await saveTokens(sid, refreshed);
   return refreshed;
 }
 
-export async function getValidToken(): Promise<string> {
-  const tokens = await loadTokens();
+export async function getValidToken(sid: string): Promise<string> {
+  const tokens = await loadTokens(sid);
 
   if (!tokens) {
     throw new Error('Not authenticated. Please visit /auth/strava to connect your account.');
   }
 
   if (isTokenExpired(tokens)) {
-    const refreshed = await refreshAccessToken(tokens);
+    const refreshed = await refreshAccessToken(sid, tokens);
     return refreshed.access_token;
   }
 
