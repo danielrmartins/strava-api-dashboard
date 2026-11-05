@@ -72,7 +72,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       }
 
       if (!code) {
-        return reply.status(400).send({ error: 'Missing authorization code' });
+        return reply.redirect(`${FRONTEND_URL}/?error=missing_code`);
       }
 
       const clientId = process.env.STRAVA_CLIENT_ID;
@@ -80,7 +80,8 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
       const redirectUri = process.env.REDIRECT_URI;
 
       if (!clientId || !clientSecret || !redirectUri) {
-        return reply.status(500).send({ error: 'Server misconfiguration: missing env vars' });
+        fastify.log.error('Missing STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET or REDIRECT_URI');
+        return reply.redirect(`${FRONTEND_URL}/?error=server_error`);
       }
 
       try {
@@ -123,14 +124,15 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
         reply.setCookie(COOKIE_NAME, sessionId, COOKIE_OPTIONS);
         return reply.redirect(`${FRONTEND_URL}/`);
       } catch (err) {
-        fastify.log.error(err, 'Failed to exchange code for token');
         if (axios.isAxiosError(err)) {
-          return reply.status(502).send({
-            error: 'Failed to obtain token from Strava',
-            details: err.response?.data,
-          });
+          fastify.log.error(
+            { status: err.response?.status, data: err.response?.data },
+            'Failed to exchange code for token'
+          );
+          return reply.redirect(`${FRONTEND_URL}/?error=strava_token`);
         }
-        return reply.status(500).send({ error: 'Internal server error during authentication' });
+        fastify.log.error(err, 'Authentication failed after token exchange');
+        return reply.redirect(`${FRONTEND_URL}/?error=server_error`);
       }
     }
   );
