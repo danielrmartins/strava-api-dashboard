@@ -1,3 +1,10 @@
+const ERROR_MESSAGES: Record<string, string> = {
+  access_denied: 'Autorização negada. Tente novamente.',
+  missing_code: 'O Strava não retornou o código de autorização. Tente novamente.',
+  strava_token: 'Não foi possível obter o acesso junto ao Strava. Tente novamente.',
+  server_error: 'Erro no servidor ao concluir o login. Tente novamente em instantes.',
+};
+
 interface Props {
   error?: string;
 }
@@ -14,8 +21,10 @@ export function Login({ error }: Props) {
         <h1>Corre que é Dado</h1>
         <p>Analise sua performance de corrida com dados diretamente do Strava.</p>
 
-        {error === 'access_denied' && (
-          <div className="login-error">Autorização negada. Tente novamente.</div>
+        {error && (
+          <div className="login-error">
+            {ERROR_MESSAGES[error] ?? 'Erro ao fazer login. Tente novamente.'}
+          </div>
         )}
 
         <a href="/auth/strava" className="btn-strava">

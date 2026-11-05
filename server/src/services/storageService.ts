@@ -58,10 +58,7 @@ class RedisStorage implements IStorage {
   private async getClient(): Promise<any> {
     if (!this.client) {
       const { Redis } = await import('@upstash/redis');
-      this.client = new Redis({
-        url: process.env.UPSTASH_REDIS_REST_URL!,
-        token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-      });
+      this.client = new Redis({ url: REDIS_URL!, token: REDIS_TOKEN! });
     }
     return this.client;
   }
@@ -86,8 +83,33 @@ class RedisStorage implements IStorage {
   }
 }
 
+// ─── Missing configuration (serverless without Redis) ────────────────────────
+
+// On Vercel the filesystem is read-only and not shared between invocations,
+// so file storage can't hold sessions. Fail with an explicit message instead
+// of an obscure EROFS error.
+class MissingRedisStorage implements IStorage {
+  private fail(): never {
+    throw new Error(
+      'Redis storage is not configured: set UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN ' +
+        '(or KV_REST_API_URL/KV_REST_API_TOKEN from the Vercel Upstash integration).'
+    );
+  }
+  async get<T>(): Promise<T | null> { return this.fail(); }
+  async set(): Promise<void> { this.fail(); }
+  async del(): Promise<void> { this.fail(); }
+}
+
 // ─── Export the right implementation based on environment ────────────────────
 
-const isProduction = Boolean(process.env.UPSTASH_REDIS_REST_URL);
+// Accept both the Upstash names and the ones injected by the Vercel
+// Marketplace Upstash integration (KV_REST_API_*).
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
 
-export const storage: IStorage = isProduction ? new RedisStorage() : new FileStorage();
+export const storage: IStorage =
+  REDIS_URL && REDIS_TOKEN
+    ? new RedisStorage()
+    : process.env.VERCEL
+      ? new MissingRedisStorage()
+      : new FileStorage();
